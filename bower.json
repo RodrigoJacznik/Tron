@@ -1,0 +1,21 @@
+{
+  "name": "juego",
+  "version": "0.0.0",
+  "authors": [
+    "Jacznik Rodrigo <jacznik.rodrigo@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "paper": "~0.9.22"
+  },
+  "dependencies": {
+    "paper": "~0.9.22"
+  }
+}
