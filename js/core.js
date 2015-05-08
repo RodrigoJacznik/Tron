@@ -7,9 +7,9 @@ var Core = (function (Player) {
         PLAYERS = [],
         CANVAS = null,
         CONTEXT = null,
-        BACKGROUND = [0, 0, 0, 255],
-        LINE_BACKGROUND = [0, 255, 255, 255],
-        WALLS = [0, 255, 255, 255],
+        FLAT = [50, 50, 50, 255],
+        FLAT_LINES = [0, 255, 255, 255],
+        WALLS = [0, 143, 179, 255],
         UP = 38,
         RIGTH = 39,
         DOWN = 40,
@@ -20,46 +20,47 @@ var Core = (function (Player) {
         W = 87;
 
     function addPlayer(player) {
-        PLAYERS.push(player)
+        PLAYERS.push(player);
     }
 
     function initCanvas() {
-        CANVAS = document.getElementById('canvas');
-        CONTEXT = CANVAS.getContext('2d');
-
         makeBackground();
     }
 
     function makeBackground() {
-        CONTEXT.save();
-        // BLUR paredes
-        //                CONTEXT.shadowColor = "#0cf";
-        //                CONTEXT.shadowBlur = 20;
-        //                CONTEXT.shadowOffsetX = 0;
-        //                CONTEXT.shadowOffsetY = 0;
-
-        CONTEXT.fillStyle = getRGBAColor(BACKGROUND);
-        CONTEXT.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        CONTEXT.strokeStyle = getRGBAColor(LINE_BACKGROUND);
-        CONTEXT.lineWidth = 1;
-
-        // GRILLA
-        //for (var i = 10; i < canvasHeight; i += 30) {
-        //                    CONTEXT.beginPath();
-        //                    CONTEXT.moveTo(i, 0);
-        //                    CONTEXT.lineTo(i, canvasWidth);
-        //                    CONTEXT.stroke();
-        //                    CONTEXT.clearRect(i, 0, 1, canvasWidth);
-        //                                        CONTEXT.moveTo(0, i);
-        //                                        CONTEXT.strokeRect(0, i, 1, canvasHeight);
-        //                                        CONTEXT.lineTo(canvasHeight, i);
-        //                                        CONTEXT.stroke();
-        //}
-
-        CONTEXT.lineWidth = 10;
-        CONTEXT.strokeStyle = getRGBAColor(WALLS);
-        CONTEXT.strokeRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        CONTEXT.restore();
+        var background = new Raster('background');
+        background.position = view.center;
+        view.draw();
+        //        var flat = new Path.Rectangle({
+        //            from: [0, 0],
+        //            to: [view.size.width, view.size.height],
+        //            fillColor: getRGBAColor(FLAT)
+        //        });
+        //
+        //        var flat_lines = [];
+        //        for (var i = 10; i < view.size.width; i += 30) {
+        //            flat_lines.push(new Path.Line({
+        //                from: [i, 0],
+        //                to: [i, view.size.height],
+        //                strokeColor: getRGBAColor(FLAT_LINES)
+        //            }));
+        //            flat_lines.push(new Path.Line({
+        //                from: [0, i],
+        //                to: [view.size.height, i],
+        //                strokeColor: getRGBAColor(FLAT_LINES)
+        //            }))
+        //        }
+        //
+        //        var walls_shadow = [WALLS[0], WALLS[1] - 50, WALLS[2], WALLS[3]];
+        //        var walls = new Path.Rectangle({
+        //            from: [0, 0],
+        //            to: [view.size.width, view.size.height],
+        //            strokeColor: getRGBAColor(WALLS),
+        //            strokeWidth: 10,
+        //            shadowColor: getRGBAColor(walls_shadow),
+        //            shadowBlur: 20
+        //        });
+        //        view.draw();
     }
 
     function getRGBAColor(arrayColor) {
@@ -72,40 +73,13 @@ var Core = (function (Player) {
         return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + a + ')';
     }
 
-    function drawLine(player) {
-        CONTEXT.save();
-        CONTEXT.lineTo(player.x, player.y);
-        setUpLine(player);
-        CONTEXT.stroke();
-        CONTEXT.restore();
-    }
-
-    function setUpLine(player) {
-        CONTEXT.strokeStyle = player.color;
-        // CONTEXT.shadowColor = "#f11";
-        CONTEXT.lineCap = 'round';
-        // CONTEXT.shadowOffsetY = 0;
-        CONTEXT.lineWidth = 6;
-    }
-
-    function startLineDraw(player) {
-        CONTEXT.beginPath();
-        CONTEXT.moveTo(player.x, player.y);
-    }
-
-    function updateGame() {
-        var i, player;
-
-        for (i = 0; i < PLAYERS.length; i += 1) {
-            player = PLAYERS[i];
-            //        player.checkCollition();
-            startLineDraw(player);
-            player.move();
-            drawLine(player);
-        }
+    function movePlayer(player) {
+        player.move()
+        view.draw();
     }
 
     function keypress(e) {
+        console.log(e.keyCode);
         switch (e.keyCode) {
         case UP:
             PLAYERS[0].up();
@@ -134,18 +108,36 @@ var Core = (function (Player) {
         }
     }
 
+    function updateGame() {
+        var i, j, player;
+
+        for (i = 0; i < PLAYERS.length; i += 1) {
+            player = PLAYERS[i];
+            movePlayer(player);
+
+            player.checkAutoCollision();
+            player.checkBoundCollision(view.size.width - 10, view.size.height - 10);
+            for (j = 0; j < PLAYERS.length; j += 1) {
+                if (j !== i) {
+                    player.checkCollisionWithOtherPlayer(PLAYERS[j].path);
+                }
+            }
+
+        }
+    }
+
     function initGame() {
         document.onkeydown = keypress;
-        addPlayer(new Player("#f55", 200, 200, 0, 0));
-        addPlayer(new Player("#55f", 200, 200, 0, 0));
-
         initCanvas();
+        addPlayer(new Player("rgba(255, 0, 0, 0.6)", 10, 100, 0, 0));
+        addPlayer(new Player("rgba(0, 255, 0, 0.6)", 200, 10, 0, 0));
+
         updateGame();
-        setInterval(updateGame, 20);
+        setInterval(updateGame, 10);
     }
 
     return {
         initGame: initGame
     };
 
-}(PlayerManager.Player));
+}(PlayerManager.Player, paper, window));
