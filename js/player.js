@@ -1,89 +1,135 @@
 var PlayerManager = (function () {
-
     'use strict';
 
-    var STEP_X = 5,
-        STEP_Y = 5;
+    var STEP_X = 6,
+        STEP_Y = 6,
+        STROKE_WIDTH = 5,
+        DEBUG = true,
+        NORTH = 'N',
+        EAST = 'E',
+        SOUTH = 'S',
+        WEST = 'W';
 
     function Player(color, x, y, stepX, stepY) {
-        this.color = color;
         this.x = x;
         this.y = y;
         this.stepX = stepX;
         this.stepY = stepY;
+        this.actualDirection = EAST;
+        this.lastDirection = EAST;
+
+        var initialPoint = new paper.Point(x, y);
+
+
+        var tail = new Path({
+            segments: [[x, y], [x + 5, y]],
+            name: 'tail'
+        });
+
+        var head = new Path({
+            segments: [[x + 5, y], [x + 10, y]],
+            name: 'head'
+        });
+
+        this.path = new CompoundPath({
+            children: [tail, head],
+            strokeWidth: 6,
+            strokeColor: color,
+            selected: DEBUG
+        });
     }
 
     Player.prototype.move = function () {
-        this.x += this.stepX;
-        this.y += this.stepY;
+        var tail = this.path.firstChild;
+
+        //        if (this.lastDirection !== this.actualDirection) {
+        //            var firstPoint = tail.getFirstSegment()._point;
+        //            var lastPoint = tail.getLastSegment()._point;
+        //
+        //            var newTail = new Path({
+        //                segments: [firstPoint, lastPoint]
+        //            });
+        //
+        //            this.path.firstChild.replaceWith(newTail);
+        //            tail = newTail;
+        //            this.lastDirection = this.actualDirection;
+        //        }
+
+        this.path.lastChild.remove();
+        tail.lineBy(this.stepX, this.stepY);
+
+        var lastPoint = tail.getLastSegment()._point;
+        var head = new Path({
+            segments: [[lastPoint.x, lastPoint.y], [lastPoint.x + this.stepX, lastPoint.y + this.stepY]]
+        });
+
+        this.path.addChild(head);
+    };
+
+    Player.prototype.checkAutoCollision = function () {
+        var head = this.path.firstChild,
+            tail = this.path.lastChild;
+
+        if (head.getIntersections(tail).length > 1) {
+            this.stop();
+        }
+    };
+
+    Player.prototype.checkBoundCollision = function (width, height) {
+        var head = this.path.firstChild,
+            lastPoint = head.getLastSegment()._point;
+
+        if (lastPoint.x > width || lastPoint.y > height || lastPoint.x < 0 || lastPoint.y < 0) {
+            this.stop();
+        }
+    }
+
+    Player.prototype.checkCollisionWithOtherPlayer = function (playerPath) {
+        var head = this.path.firstChild;
+
+        if (playerPath.getIntersections(head).length > 0) {
+            this.stop();
+        }
+    }
+
+    Player.prototype.getLastPoint = function () {
+        return new Point(this.x, this.y);
     };
 
     Player.prototype.up = function () {
         this.stepY = -STEP_Y;
         this.stepX = 0;
+        this.lastDirection = this.actualDirection;
+        this.actualDirection = NORTH;
     };
 
     Player.prototype.right = function () {
         this.stepY = 0;
         this.stepX = STEP_X;
+        this.lastDirection = this.actualDirection;
+        this.actualDirection = EAST;
     };
 
     Player.prototype.down = function () {
         this.stepY = STEP_Y;
         this.stepX = 0;
+        this.lastDirection = this.actualDirection;
+        this.actualDirection = SOUTH;
     };
 
     Player.prototype.left = function () {
         this.stepY = 0;
         this.stepX = -STEP_X;
+        this.lastDirection = this.actualDirection;
+        this.actualDirection = WEST;
     };
 
-    // TODO: Hacer colisiones con paper
-    //Player.prototype.checkCollition = function () {
-    //    var imageData;
-    //    if (this.stepX > 0) {
-    //        imageData = context.getImageData(this.x + 3, this.y, this.stepX, 3);
-    //    }
-    //    if (this.stepX < 0) {
-    //        imageData = context.getImageData(this.x - 3, this.y, this.stepX, 3);
-    //    }
-    //    if (this.stepY > 0) {
-    //        imageData = context.getImageData(this.x, this.y + 3, 3, this.stepY);
-    //    }
-    //    if (this.stepY < 0) {
-    //        imageData = context.getImageData(this.x, this.y - 3, 3, this.stepY);
-    //    }
-    //
-    //    if (imageData !== undefined) {
-    //        imageData = imageData.data;
-    //        var dataLength = imageData.length;
-    //        var colision;
-    //        for (var i = 0; i < dataLength; i += 4) {
-    //            colision = (imageData[i] !== BACKGROUND[0] ||
-    //                    imageData[i + 1] !== BACKGROUND[1] ||
-    //                    imageData[i + 2] !== BACKGROUND[2] ||
-    //                    imageData[i + 3] !== BACKGROUND[3]) &&
-    //                (imageData[i] !== WALLS[0] ||
-    //                    imageData[i + 1] !== WALLS[1] ||
-    //                    imageData[i + 2] !== WALLS[2] ||
-    //                    imageData[i + 3] !== WALLS[3])
-    //
-    //            if (colision) {
-    //                var playerID;
-    //                if (this.color === "#f55") {
-    //                    playerID = "player1";
-    //                } else if (this.color === "#55f") {
-    //                    playerID = "player2"
-    //                }
-    //
-    //                var td = document.getElementById(playerID);
-    //                td.innerHTML = parseInt(td.innerHTML) + 1;
-    //            }
-    //        }
-    //    }
-    //};
+    Player.prototype.stop = function () {
+        this.stepX = 0;
+        this.stepY = 0;
+    };
 
     return {
         Player: Player
     };
-}());
+}(paper));

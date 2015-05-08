@@ -3,16 +3,27 @@
 
 <head>
     <meta charset="UTF-8">
+    <style>
+        img {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
     <canvas id="canvas" width="600" height="600"></canvas>
-
+    <img id="background" src="img/index.png" alt="">
+    <p id="p"></p>
     <script src="bower_components/paper/dist/paper-full.js"></script>
+
     <script src="js/player.js"></script>
     <script src="js/core.js"></script>
+
     <script>
+        paper.install(window);
+
         window.onload = function app() {
+            paper.setup('canvas');
             Core.initGame();
         }
     </script>
