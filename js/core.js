@@ -30,37 +30,19 @@ var Core = (function (Player) {
     function makeBackground() {
         var background = new Raster('background');
         background.position = view.center;
+        background.width = view.width;
+        background.height = view.height;
+
+        var walls_shadow = [WALLS[0], WALLS[1] - 50, WALLS[2], WALLS[3]];
+        var walls = new Path.Rectangle({
+            from: [0, 0],
+            to: [view.size.width, view.size.height],
+            strokeColor: getRGBAColor(WALLS),
+            strokeWidth: 10,
+            shadowColor: getRGBAColor(walls_shadow),
+            shadowBlur: 20
+        });
         view.draw();
-        //        var flat = new Path.Rectangle({
-        //            from: [0, 0],
-        //            to: [view.size.width, view.size.height],
-        //            fillColor: getRGBAColor(FLAT)
-        //        });
-        //
-        //        var flat_lines = [];
-        //        for (var i = 10; i < view.size.width; i += 30) {
-        //            flat_lines.push(new Path.Line({
-        //                from: [i, 0],
-        //                to: [i, view.size.height],
-        //                strokeColor: getRGBAColor(FLAT_LINES)
-        //            }));
-        //            flat_lines.push(new Path.Line({
-        //                from: [0, i],
-        //                to: [view.size.height, i],
-        //                strokeColor: getRGBAColor(FLAT_LINES)
-        //            }))
-        //        }
-        //
-        //        var walls_shadow = [WALLS[0], WALLS[1] - 50, WALLS[2], WALLS[3]];
-        //        var walls = new Path.Rectangle({
-        //            from: [0, 0],
-        //            to: [view.size.width, view.size.height],
-        //            strokeColor: getRGBAColor(WALLS),
-        //            strokeWidth: 10,
-        //            shadowColor: getRGBAColor(walls_shadow),
-        //            shadowBlur: 20
-        //        });
-        //        view.draw();
     }
 
     function getRGBAColor(arrayColor) {
@@ -131,7 +113,6 @@ var Core = (function (Player) {
         initCanvas();
         addPlayer(new Player("rgba(255, 0, 0, 0.6)", 10, 100, 0, 0));
         addPlayer(new Player("rgba(0, 255, 0, 0.6)", 200, 10, 0, 0));
-
         updateGame();
         setInterval(updateGame, 10);
     }
