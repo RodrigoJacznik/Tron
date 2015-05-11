@@ -4,7 +4,7 @@ var PlayerManager = (function () {
     var STEP_X = 6,
         STEP_Y = 6,
         STROKE_WIDTH = 5,
-        DEBUG = true,
+        DEBUG = false,
         NORTH = 'N',
         EAST = 'E',
         SOUTH = 'S',
@@ -17,6 +17,10 @@ var PlayerManager = (function () {
         this.stepY = stepY;
         this.actualDirection = EAST;
         this.lastDirection = EAST;
+        this.isDead = false;
+        this.color = color;
+        this.curve = 0;
+        this.name;
 
         var initialPoint = new paper.Point(x, y);
 
@@ -40,55 +44,66 @@ var PlayerManager = (function () {
     }
 
     Player.prototype.move = function () {
-        var tail = this.path.firstChild;
+        if (!this.isDead) {
+            var tail = this.path.firstChild;
 
-        //        if (this.lastDirection !== this.actualDirection) {
-        //            var firstPoint = tail.getFirstSegment()._point;
-        //            var lastPoint = tail.getLastSegment()._point;
-        //
-        //            var newTail = new Path({
-        //                segments: [firstPoint, lastPoint]
-        //            });
-        //
-        //            this.path.firstChild.replaceWith(newTail);
-        //            tail = newTail;
-        //            this.lastDirection = this.actualDirection;
-        //        }
+            //            if (this.lastDirection !== this.actualDirection) {
+            //                this.curve += 1;
+            //
+            //                var firstPoint = tail._segments[this.curve]._point;
+            //                var lastPoint = tail.getLastSegment()._point;
+            //
+            //                var newTail = new Path({
+            //                    segments: [lastPoint, firstPoint]
+            //                });
+            //
+            //                this.path.firstChild.replaceWith(newTail);
+            //                tail = newTail;
+            //                this.lastDirection = this.actualDirection;
+            //            }
 
-        this.path.lastChild.remove();
-        tail.lineBy(this.stepX, this.stepY);
+            this.path.lastChild.remove();
+            tail.lineBy(this.stepX, this.stepY);
 
-        var lastPoint = tail.getLastSegment()._point;
-        var head = new Path({
-            segments: [[lastPoint.x, lastPoint.y], [lastPoint.x + this.stepX, lastPoint.y + this.stepY]]
-        });
+            var lastPoint = tail.getLastSegment()._point;
+            var head = new Path({
+                segments: [[lastPoint.x, lastPoint.y], [lastPoint.x + this.stepX, lastPoint.y + this.stepY]]
+            });
 
-        this.path.addChild(head);
+            this.path.addChild(head);
+        }
     };
 
     Player.prototype.checkAutoCollision = function () {
-        var head = this.path.firstChild,
-            tail = this.path.lastChild;
+        if (!this.isDead && (this.stepX + this.stepY) !== 0) {
+            var head = this.path.lastChild,
+                tail = this.path.firstChild;
 
-        if (head.getIntersections(tail).length > 1) {
-            this.stop();
+            if (head.getIntersections(tail).length > 1) {
+                this.isDead = true;
+            }
         }
     };
 
     Player.prototype.checkBoundCollision = function (width, height) {
-        var head = this.path.firstChild,
-            lastPoint = head.getLastSegment()._point;
+        if (!this.isDead) {
+            var head = this.path.lastChild,
+                lastPoint = head.getLastSegment()._point;
 
-        if (lastPoint.x > width || lastPoint.y > height || lastPoint.x < 0 || lastPoint.y < 0) {
-            this.stop();
+            // 10 es el border del juego
+            if (lastPoint.x > width || lastPoint.y > height || lastPoint.x < 10 || lastPoint.y < 10) {
+                this.isDead = true;
+            }
         }
     }
 
     Player.prototype.checkCollisionWithOtherPlayer = function (playerPath) {
-        var head = this.path.firstChild;
+        if (!this.isDead) {
+            var head = this.path.lastChild;
 
-        if (playerPath.getIntersections(head).length > 0) {
-            this.stop();
+            if (playerPath.getIntersections(head).length > 0) {
+                this.isDead = true;
+            }
         }
     }
 
